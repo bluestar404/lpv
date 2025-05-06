@@ -1,0 +1,92 @@
+BFS
+--------
+
+I began by setting up the environment for a BFS traversal on a tree structure, where each node has a parent and we assume node 0 to be the root. I declared a fixed-size parent array to represent the tree, where the index represents the child and the value stored at that index is the parent of that node.
+
+Then I created a simple queue system using arrays — it’s a manually implemented FIFO structure using front and rear pointers. This helps simulate the traditional BFS algorithm, where nodes are visited level by level.
+
+Next, I tackled the most computation-heavy part — finding children of a node. Since in a tree, children of any node are those indices whose parent matches the current node, I scan the parent array. But scanning through all nodes to find children is inefficient if done sequentially, especially for larger trees. So I used OpenMP to parallelize this child-finding loop. Each thread independently checks if a node is a child of the current node. If it is, I add it to a shared children list. Since multiple threads might try to write to that list at the same time, I wrapped that part in a critical section to avoid data races.
+
+After that, I wrote the main BFS function, which follows the typical structure — start from the root, mark it as visited, and keep expanding outwards by visiting children of the current node. After dequeuing a node, I use the parallel child-finding function I mentioned earlier. Then for each child, if it hasn’t been visited yet, I mark it visited and enqueue it.
+
+The program loops until the queue is empty, meaning all reachable nodes have been processed. The traversal result is printed in BFS order.
+
+In the main function, I handle user input to set the number of nodes and build the parent-child relationships interactively. The tree is built dynamically based on user input, except for the root which has no parent.
+
+The highlight of this program is how I use parallel processing selectively — not to run the BFS itself in parallel, because BFS is inherently sequential — but to optimize the part of BFS that can be parallelized: scanning for children. This is especially useful when each node might have many children, or when working with trees with a large number of nodes.
+
+-------------------
+
+DFS
+
+-----------------
+
+I started by defining the necessary arrays and constants. The core structure revolves around the parent array, which represents the tree. Each index is a node, and its value in the array indicates its parent. The visited array is used to track which nodes we've already explored to avoid revisiting and infinite recursion.
+
+Just like in the BFS version, I assume node 0 is the root. I initialize all nodes as unvisited and the parent of every node to -1 by default.
+
+The key part of the program is the parallel depth-first search. DFS, by nature, is recursive. So I wrote a function to perform DFS starting from a node. At each node, I mark it as visited and print it immediately — because DFS processes the current node before exploring deeper.
+
+To find which nodes are children of the current node, I scan the parent array. I parallelized this part with OpenMP because each index can be checked independently. If a node is found to be a child of the current node, I add it to a shared children list. Since multiple threads might add to that list at the same time, I used a critical section to ensure safe updates.
+
+Once I have the list of children, I try to visit each one in parallel. I used #pragma omp parallel for to allow multiple child nodes to be explored at the same time. But since DFS is recursive and modifying shared data (visited), there’s a risk of race conditions. So I used a critical section inside the traversal loop — and even did a second check for visited[child] within it. That ensures we don't recurse into the same child more than once even if multiple threads are active.
+
+Finally, in the main function, I take the number of nodes from the user and build the tree by asking for each node’s parent, except for the root. Once the tree is ready, I call the parallel DFS function starting from the root.
+
+The main challenge here is ensuring thread safety during recursive traversal, especially in DFS where one wrong call can corrupt the traversal path. So I took care to balance parallelism with correctness using proper OpenMP constructs.
+
+This setup is efficient for large trees with a wide branching factor, where different subtrees can be explored concurrently without stepping on each other’s paths.
+
+------------------------------
+
+Bubble
+
+----------------------------
+
+I began the program by including the necessary headers and defining two functions — one for sequential bubble sort and one for parallel bubble sort using OpenMP.
+
+In the sequential version, I used the classic bubble sort logic, where we repeatedly pass through the array, comparing each pair of adjacent elements and swapping them if they’re in the wrong order. This continues until the array is fully sorted. Each pass ensures the largest unsorted element moves to the correct position at the end.
+
+To demonstrate parallelism, I implemented a parallel version of bubble sort. Here, in each iteration, I parallelized the inner loop using OpenMP's parallel for directive. This allows multiple comparisons and swaps to happen at the same time across threads. However, this approach has a major limitation: since adjacent elements may be swapped simultaneously by different threads, it can introduce race conditions or inconsistent states. That’s why this form of parallel bubble sort is not very reliable for correctness in all cases — but I used it to demonstrate the concept of parallelism in sorting.
+
+In the main function, I first take input for the number of elements and then read the array. I store a copy of the original array so I can compare sequential and parallel sorting on the same data.
+
+Next, I time the execution of the sequential bubble sort using OpenMP’s omp_get_wtime() to measure performance. After that, I run the parallel sort, but I repeat it 1000 times — this is done to stretch the time and better reflect the average performance, because a single parallel pass might be too fast to measure meaningfully for small arrays.
+
+Finally, I print both sorted arrays and show the execution time for both versions. This helps compare the performance impact of parallelization.
+
+The overall idea of this code is to show how a basic algorithm like bubble sort behaves when moved from a sequential to a parallel environment — even if bubble sort isn't ideal for parallelism, it's a simple way to demonstrate OpenMP usage.
+
+-------------------------
+Merge 
+
+-------------------------
+
+I started the program by including the necessary header files and defining constants and global arrays to store the data — a[] for the input array, temp[] for intermediate merge operations, and backup[] to preserve the original data for fair comparison.
+
+Next, I defined the merge function, which takes a segment of the array and merges two sorted halves into one sorted segment. It uses three pointers — one for each half and one for placing elements into the temporary array. Once merged, the result is copied back into the original array.
+
+Then, I implemented two versions of merge sort — sequential and parallel.
+In the sequential merge sort, I use the divide-and-conquer approach. I recursively divide the array into two halves until I reach single elements, then I merge them back in sorted order using the merge function.
+
+For the parallel version, I use OpenMP's parallel sections to allow the left and right recursive calls to run in parallel. This enables us to take advantage of multiple threads, as each subproblem can be solved independently. Once both halves are sorted, they’re merged just like in the sequential version.
+
+In the main function, I begin by taking user input for the number of elements and the actual values. I store a backup copy of the input for consistency.
+
+Then I perform and time both sorting versions. First, I restore the input array from the backup and run the sequential merge sort, recording the time taken using omp_get_wtime().
+Next, I restore the array again and run the parallel merge sort, but I repeat it 1000 times to stretch the execution time for more accurate performance measurement — especially helpful if the input is small.
+
+Finally, I display the sorted array and print the time taken by both approaches. This lets us compare how parallel execution improves performance over the sequential version, especially for large data sets.
+
+The core idea here is to demonstrate how merge sort — which is naturally suited to parallelization — can be optimized using OpenMP, and how dividing work across threads reduces execution time for large input sizes.
+--------------------
+
+Sum - etc
+
+-------------------
+
+The program first takes the number of elements and their values from the user. It stores them in an array. Then it sets up three variables: one for the minimum value, one for the maximum, and one for the sum of all elements. These are initially assigned using the first element of the array.
+
+After that, it uses OpenMP to perform a parallel loop. This is where parallelism and reduction come in. In simple terms, reduction is a way of letting multiple threads work on parts of a task, like finding a sum or a maximum, and then safely combining their individual results into one final answer. Without reduction, threads might interfere with each other when updating shared variables, but reduction avoids that by handling the merging part automatically and safely.
+
+So in the loop, each thread looks at different parts of the array. One thread might find a smaller value, another might find a bigger one, and each adds to its own sum. Once all threads are done, OpenMP puts everything together: it picks the smallest of the minimums, the largest of the maximums, and adds all the partial sums into one total. Finally, the program prints out the minimum, maximum, total sum, and the average, which is just the sum divided by the number of elements.
