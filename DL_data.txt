@@ -1,0 +1,59 @@
+======== BOSTON HOUSING============
+
+So in this code, I worked on solving the Boston housing price prediction problem by using both a traditional linear regression model and a deep neural network, but with a focus on applying linear regression using a deep neural network framework.
+
+I began by importing the Boston housing dataset directly from Keras, which provides a pre-cleaned version with 13 numerical features per sample and the target being the median house value. I split the data into training and testing sets and then standardized the feature values — this step is crucial for training deep learning models effectively, as it brings all the inputs onto a similar scale.
+
+Once the data was ready, I first trained a linear regression model using scikit-learn. After fitting it on the training data, I predicted the test set values and evaluated the model’s performance using common regression metrics — RMSE to understand prediction error, R² to assess how well the model explains the variance in prices, and MAE to see the average magnitude of errors.
+
+After establishing this baseline with linear regression, I moved on to building a deep neural network using Keras. The architecture consisted of an input layer for the 13 features, followed by multiple dense hidden layers with ReLU activation functions to capture non-linear relationships, ending with a single output neuron for the predicted price. I compiled the model using the Adam optimizer with MSE as the loss function and MAE as a metric, then trained it for 100 epochs with a small validation split.
+
+Finally, I evaluated the deep neural network on the test data to get its MSE and MAE, which allowed me to compare its performance with the linear regression model. I also included a prediction step at the end where I manually input a new data point, scaled it using the same training mean and standard deviation, and passed it to the trained DNN model to get a predicted price.
+
+=========== IMDB=======================
+
+
+So in this code, I built a deep neural network to perform binary classification using the IMDB movie reviews dataset. The goal was to classify each review as either positive or negative purely based on its text content.
+
+First, I loaded the IMDB dataset using Keras, limiting it to the top 10,000 most frequent words to make the model manageable and more efficient. Each review was already preprocessed and represented as a sequence of integers, where each integer corresponds to a specific word in the dictionary.
+
+Since neural networks require fixed-size input vectors, I transformed these sequences into binary vectors using a custom function. This function created a 10,000-dimensional vector for each review, where the presence of a word was marked as 1 in its corresponding position. This effectively turned each review into a bag-of-words representation.
+
+Next, I defined a simple neural network using Keras. It had an input layer that accepted these 10,000-length vectors, followed by one hidden dense layer with 16 neurons using the ReLU activation function. The final output layer used a single neuron with a sigmoid activation, which is ideal for binary classification because it outputs probabilities between 0 and 1.
+
+I compiled the model with the Adam optimizer and used binary cross-entropy as the loss function, which is standard for binary classification tasks. I also chose accuracy as the evaluation metric.
+
+Then I trained the model on the training data for five epochs using a batch size of 512. During training, I used 20% of the training set for validation to monitor the model’s performance on unseen data.
+
+Finally, I evaluated the trained model on the test data, which gave me the loss and accuracy. The accuracy told me how often the model correctly predicted the sentiment of the reviews, while the loss indicated how far off its predictions were overall.
+
+
+================ OCR Text =================
+
+
+So in this code, I implemented a deep neural network to recognize handwritten digits using the MNIST dataset, which is a standard dataset of grayscale images representing digits from 0 to 9.
+
+I began by loading the MNIST dataset using Keras, which gave me separate training and test sets. Each image was originally in a 28x28 pixel format. To feed them into a neural network, I reshaped the images into 1D arrays of 784 values, since fully connected layers expect flat input.
+
+To visually confirm the data, I also reshaped one of the training images back to 28x28 and displayed it using matplotlib. After verifying the image, I converted the numeric labels into one-hot encoded vectors — a standard practice for multi-class classification problems — where each label is turned into a binary vector of length 10, corresponding to the 10 digit classes.
+
+Next, I defined the architecture of the neural network using Keras' Sequential API. The model began with an input layer matching the 784-pixel input size, followed by two dense hidden layers, each with 512 neurons and ReLU activation to introduce non-linearity. I added dropout layers after each dense layer to help prevent overfitting by randomly disabling 20% of the neurons during training. Finally, the output layer had 10 neurons with a softmax activation function, which ensures that the outputs can be interpreted as class probabilities across the 10 digit classes.
+
+I compiled the model using the RMSprop optimizer and categorical cross-entropy as the loss function, which is appropriate for multi-class classification. I then trained the model for 5 epochs with a batch size of 128, using part of the test set as validation data to monitor its performance during training.
+
+After training, I evaluated the model on the test set to get the final loss and accuracy. The accuracy gave a clear measure of how well the model performed in correctly classifying the digits, and the loss indicated how confident and consistent the predictions were across the dataset.
+
+
+
+============== MNIST FASHION===========
+
+So in this code, I created a convolutional neural network (CNN) to classify images of clothing using the Fashion MNIST dataset, which contains grayscale images of various fashion items like shoes, shirts, and dresses, each sized 28 by 28 pixels.
+
+I started by loading the Fashion MNIST dataset directly from Keras, which split it into 60,000 training images and 10,000 test images. To understand what the data looked like, I displayed one sample image using matplotlib. Then, I normalized the pixel values by dividing them by 255.0 to bring all values into the range of 0 to 1, which helps the neural network train more efficiently. After that, I reshaped the data so each image included a channel dimension, making the shape (28, 28, 1), which is required for convolutional layers in Keras.
+
+Next, I built the CNN using Keras' Sequential API. The model started with a convolutional layer with 32 filters followed by a max pooling layer and dropout to reduce overfitting. I added two more convolutional layers — one with 64 filters and the other with 128 — each followed by pooling and dropout again to manage overfitting and maintain generalization. After these convolutional layers, I flattened the output and passed it through a fully connected dense layer with 128 neurons, followed by another dropout. The final output layer had 10 neurons with softmax activation to give the probability distribution over the 10 clothing categories.
+
+After building the model, I compiled it using the Adam optimizer, which adjusts learning rates during training. I chose sparse categorical cross-entropy as the loss function since the class labels were provided as integers and not one-hot vectors. I trained the model for two epochs using the test data for validation during training, just to get a quick sense of performance.
+
+Finally, I evaluated the model on the test set and printed the test accuracy to see how well it could generalize to unseen data.
+
